@@ -1,6 +1,8 @@
 # SparkJava Instrumentation Agent
 > Quickly add data-tracking metrics to [SparkJava](http://sparkjava.com/) responses without modifying any code
 
+[![Build Status](https://travis-ci.com/argonotix/sjia.svg?token=BmwMrNHAsN7s3fbyKJQG&branch=master)](https://travis-ci.com/argonotix/sjia)
+
 SJIA is a Java Agent that allows for instantaneous metric monitoring without adding any code in your project.  Responses are modified with headers that indicate metrics such as round trip time.  SJIA also includes an optional built-in monitoring application that allows you to see live updates of the performance of your [SparkJava](http://sparkjava.com/) routes.
 
 ## Usage
