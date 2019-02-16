@@ -32,6 +32,6 @@ The monitoring application will open a web server on port 45000.  The latest sta
 ```
 Visiting the address http://localhost:45000 in a web browser will open the the metric monitoring utility.
 
-### License
+## License
 
 Distributed under the MIT license.
