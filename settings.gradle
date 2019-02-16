@@ -1,0 +1,4 @@
+rootProject.name = 'demoapp'
+include 'agent'
+include 'webapp'
+
