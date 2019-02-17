@@ -1,3 +1,29 @@
+/*
+ *
+ * The MIT License (MIT)
+ *
+ * Copyright (c) 2019 Christopher Kies
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ *
+ */
+
 package argonotix.agent;
 
 import com.google.common.math.StatsAccumulator;
@@ -11,10 +37,12 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * MetricInterceptor attaches around all spark.Route instances, adding metrics.
+ */
 public final class MetricInterceptor {
-    static final Map<String, StatsAccumulator> routes = new ConcurrentHashMap<>();
-    static final StatsAccumulator all = new StatsAccumulator();
-    static final Object updateLock = new Object();
+    static final Map<String, StatsAccumulator> routeTimes = new ConcurrentHashMap<>();
+    static final Map<String, StatsAccumulator> routeSizes = new ConcurrentHashMap<>();
 
     /**
      * Get or create a statistic accumulator
@@ -22,11 +50,11 @@ public final class MetricInterceptor {
      * @param path the path for stats
      * @return the stats accumulator
      */
-    private static StatsAccumulator getOrCreate(String path) {
-        StatsAccumulator accum = routes.get(path);
+    private static StatsAccumulator getOrCreate(Map<String, StatsAccumulator> map, String path) {
+        StatsAccumulator accum = map.get(path);
         if (accum == null) {
             accum = new StatsAccumulator();
-            routes.put(path, accum);
+            map.put(path, accum);
         }
         return accum;
     }
@@ -46,28 +74,44 @@ public final class MetricInterceptor {
             final @Argument(1) Response response
     ) {
         try {
-            final long start = System.currentTimeMillis();
-            final Object call = callable.call();
-            final long end = System.currentTimeMillis();
-            final long time = end - start;
-
             final String path = request.pathInfo();
-            final StatsAccumulator accum = getOrCreate(path);
-            synchronized (updateLock) {
-                all.add(time);
-                accum.add(time);
-                response.header("X-metric-time", Long.toString(time));
-                response.header("X-metric-min", Double.toString(accum.min()));
-                response.header("X-metric-max", Double.toString(accum.max()));
-                response.header("X-metric-avg", Double.toString(accum.mean()));
-                response.header("X-metric-body", call == null ? "0" : Integer.toString(((String) call).length()));
-            }
 
+            final long start = System.currentTimeMillis();
+            final Object body = callable.call();
+            final long time = System.currentTimeMillis() - start;
+            final long bodySize = body == null ? 0 : ((String) body).length();
 
-            return call;
+            addTimeHeaders(response, path, time);
+            addBodyHeaders(response, path, bodySize);
+
+            return body;
         } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    private static void addTimeHeaders(Response response, String path, long time) {
+        final StatsAccumulator times = getOrCreate(routeTimes, path);
+        //noinspection SynchronizationOnLocalVariableOrMethodParameter
+        synchronized (times) {
+            times.add(time);
+            response.header("X-metric-time-min", String.format("%.2f", times.min()));
+            response.header("X-metric-time-max", String.format("%.2f", times.max()));
+            response.header("X-metric-time-avg", String.format("%.2f", times.mean()));
+        }
+        response.header("X-metric-time", Long.toString(time));
+    }
+
+    private static void addBodyHeaders(Response response, String path, long bodySize) {
+        final StatsAccumulator bodies = getOrCreate(routeSizes, path);
+        //noinspection SynchronizationOnLocalVariableOrMethodParameter
+        synchronized (bodies) {
+            bodies.add(bodySize);
+            response.header("X-metric-body-min", String.format("%.2f", bodies.min()));
+            response.header("X-metric-body-max", String.format("%.2f", bodies.max()));
+            response.header("X-metric-body-avg", String.format("%.2f", bodies.mean()));
+        }
+        response.header("X-metric-body", Long.toString(bodySize));
     }
 }
