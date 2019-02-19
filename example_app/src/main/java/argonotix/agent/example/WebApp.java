@@ -24,7 +24,23 @@
  *
  */
 
-allprojects {
-    group 'argonotix'
-    version '0.1'
+package argonotix.agent.example;
+
+import com.thedeanda.lorem.LoremIpsum;
+
+import java.util.concurrent.ThreadLocalRandom;
+
+import static spark.Spark.get;
+import static spark.Spark.staticFiles;
+
+public class WebApp {
+
+    public static void main(String[] args) {
+        staticFiles.location("/public");
+        get("/lorem", (req, res) -> {
+            res.type("application/json");
+            return "{\"lorem\":\"" + LoremIpsum.getInstance().getWords(ThreadLocalRandom.current().nextInt(50) + 50) + "\"}";
+        });
+        System.out.println("Example server is running on port http://localhost:4567");
+    }
 }

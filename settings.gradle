@@ -26,5 +26,5 @@
 
 rootProject.name = 'sjia'
 include 'agent'
-include 'webapp'
+include 'example_app'
 

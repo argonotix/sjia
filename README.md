@@ -34,6 +34,25 @@ The monitoring application will open a web server on port 45000.  The latest sta
 ```
 Visiting the address http://localhost:45000 in a web browser will open the the metric monitoring utility.
 
+
+#### Example
+Download the release file, unzip the sjia.jar and example.jar.  Execute the following command:
+```bash
+java -javagent:sjia.jar=monitor -jar example.jar
+```
+The example webapp is accessible via http://localhost:4567, and the SJIA monitoring application is
+accessible via http://localhost:45000.
+
+
+#### Building
+```
+git clone https://github.com/argonotix/sjia.git
+cd sjia
+chmod +x ./gradlew
+./gradlew build shadowJar
+cp ./agent/build/libs/agent-0.1-all.jar ./sjia.jar
+```
+
 ## License
 
 Distributed under the MIT license.

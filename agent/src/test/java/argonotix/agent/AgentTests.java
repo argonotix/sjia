@@ -42,16 +42,10 @@ import static spark.Spark.get;
 public class AgentTests {
     private static final long WORK = 50;
 
-    private static MetricWeb web;
-
     @BeforeClass
     public static void loadAgent() throws InterruptedException {
         AgentLoader.loadAgentClass(MetricAgent.class.getName(), "monitor");
         Thread.sleep(1_500); // wait for agent to attach
-        System.out.println("Attached agent");
-
-        web = new MetricWeb();
-        web.start();
 
         get("/null", (req, res) -> null);
         get("/metrix", (req, res) -> {
@@ -78,26 +72,6 @@ public class AgentTests {
             fail(e.getMessage()); // any exception here is a failure
         }
     }
-
-//    @Test
-//    public void testForever() throws InterruptedException {
-//        OkHttpClient client = new OkHttpClient();
-//        Request request = new Request.Builder()
-//                .url("http://localhost:4567/metrix")
-//                .build();
-//
-//        final int runs = 10;
-//        for (int i = 0; i < runs; i++) {
-//            try {
-//                client.newCall(request).execute();
-//            } catch (NumberFormatException | IOException e) {
-//                fail(e.getMessage()); // any exception here is a failure
-//            }
-//        }
-//        while (true) {
-//            Thread.sleep(5_000_000);
-//        }
-//    }
 
     @Test
     public void testAgentWeb() {

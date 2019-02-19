@@ -2,7 +2,7 @@
  *
  * The MIT License (MIT)
  *
- * Copyright (c) 2019 Christopher Kies
+ * Copyright (c) $year Christopher Kies
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,8 +32,10 @@ import spark.Service;
 import java.util.Map;
 
 import static spark.Service.ignite;
-import static spark.Spark.staticFiles;
 
+/**
+ * MetricWeb is the WebApp of the monitoring service for the Agent
+ */
 final class MetricWeb {
     private Service http;
 
@@ -43,7 +45,7 @@ final class MetricWeb {
     void start() {
         http = ignite();
         http.port(45000);
-        http.staticFiles.location("/public");
+        http.staticFiles.location("/monitor");
 
         http.get("/stats", (req, res) -> {
             res.type("application/json");
@@ -53,16 +55,22 @@ final class MetricWeb {
             json.append("},\"times\":{");
             addStats(MetricInterceptor.routeTimes, json);
             json.append("}}");
-            String s = json.toString();
-            System.out.println(s);
-            return s;
+            return json.toString();
         });
+
+        System.out.println("Started agent monitor on http://localhost:45000");
+
     }
 
+    /**
+     * Converts the current min/max/avg in a StatsAccumulator to the representation in JSON
+     *
+     * @param stats the stats to convert
+     * @param json  the converted JSON
+     */
     private void addStats(Map<String, StatsAccumulator> stats, StringBuilder json) {
         stats.forEach((route, acc) -> {
             json.append('"').append(route).append("\":");
-            //noinspection SynchronizationOnLocalVariableOrMethodParameter
             synchronized (acc) {
                 json.append(toString(acc));
             }

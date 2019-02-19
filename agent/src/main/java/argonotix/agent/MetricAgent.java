@@ -32,6 +32,9 @@ import net.bytebuddy.matcher.ElementMatchers;
 
 import java.lang.instrument.Instrumentation;
 
+/**
+ * The Java Agent environment setup
+ */
 public final class MetricAgent {
     /**
      * Called from EA Agent Loader (for tests)
@@ -63,9 +66,7 @@ public final class MetricAgent {
             final Instrumentation instrumentation,
             final MetricInterceptor interceptor
     ) {
-        if (arguments != null && arguments.equals("monitor")) {
-            new MetricWeb();
-        }
+        System.out.println("Connecting agent");
         try {
             new AgentBuilder.Default()
                     .type(ElementMatchers.isSubTypeOf(Class.forName("spark.Route")))
@@ -77,6 +78,13 @@ public final class MetricAgent {
         } catch (ClassNotFoundException e) {
             System.err.println("Failed to find spark route class!");
             System.exit(1);
+        }
+
+        if (arguments != null && arguments.equals("monitor")) {
+            System.out.println("Starting SJIA with monitor");
+            new MetricWeb().start();
+        } else {
+            System.out.println("Starting SJIA without monitor");
         }
     }
 }
