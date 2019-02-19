@@ -34,6 +34,19 @@ The monitoring application will open a web server on port 45000.  The latest sta
 ```
 Visiting the address http://localhost:45000 in a web browser will open the the metric monitoring utility.
 
+#### Response Headers
+Metrics in the form of HTTP Response Headers are added to every route.
+
+| Header            | Description                |
+| ----------------- | -------------------------- |
+| X-metric-time-min | Minimum Response Time      |
+| X-metric-time-max | Maximum Response Time      |
+| X-metric-time-avg | Mean Response Time         |
+| X-metric-time     | Response Time              |
+| X-metric-body-min | Minimum Response Body Size |
+| X-metric-body-max | Maximum Response Body Size |
+| X-metric-body-mvg | Mean Response Body Size    |
+| X-metric-body     | Response Body Size (bytes) |
 
 #### Example
 Download the release file, unzip the sjia.jar and example.jar.  Execute the following command:
