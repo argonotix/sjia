@@ -45,21 +45,6 @@ public final class MetricInterceptor {
     static final Map<String, StatsAccumulator> routeSizes = new ConcurrentHashMap<>();
 
     /**
-     * Get or create a statistic accumulator
-     *
-     * @param path the path for stats
-     * @return the stats accumulator
-     */
-    private static StatsAccumulator getOrCreate(Map<String, StatsAccumulator> map, String path) {
-        StatsAccumulator accum = map.get(path);
-        if (accum == null) {
-            accum = new StatsAccumulator();
-            map.put(path, accum);
-        }
-        return accum;
-    }
-
-    /**
      * Intercept the routes before the method call and perform instrumentation on route
      *
      * @param callable the 'handle' method of the route
@@ -91,8 +76,15 @@ public final class MetricInterceptor {
         return null;
     }
 
+    /**
+     * Add response headers for time measurements
+     *
+     * @param response the response to add to
+     * @param path     the path of the request
+     * @param time     the timestamp
+     */
     private static void addTimeHeaders(Response response, String path, long time) {
-        final StatsAccumulator times = getOrCreate(routeTimes, path);
+        final StatsAccumulator times = routeTimes.computeIfAbsent(path, k -> new StatsAccumulator());
         //noinspection SynchronizationOnLocalVariableOrMethodParameter
         synchronized (times) {
             times.add(time);
@@ -103,8 +95,15 @@ public final class MetricInterceptor {
         response.header("X-metric-time", Long.toString(time));
     }
 
+    /**
+     * Add response headers for body size measurements
+     *
+     * @param response the response to add to
+     * @param path     the path of the request
+     * @param bodySize the response body size
+     */
     private static void addBodyHeaders(Response response, String path, long bodySize) {
-        final StatsAccumulator bodies = getOrCreate(routeSizes, path);
+        final StatsAccumulator bodies = routeSizes.computeIfAbsent(path, k -> new StatsAccumulator());
         //noinspection SynchronizationOnLocalVariableOrMethodParameter
         synchronized (bodies) {
             bodies.add(bodySize);
